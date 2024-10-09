@@ -149,8 +149,9 @@ describe('calculateStvWinners', () => {
       { voteCount: 1, voteOrder: ['Bob', 'Alice'] },
     ];
 
-    const winners = calculateStvWinners(voteRecords, 1);
-    expect(winners).toEqual({ winners: ['Alice', 'Bob'], tieCount: 2 }); // Alice and Bob should tie
+    const { winners, tieCount } = calculateStvWinners(voteRecords, 1);
+    expect(winners).toEqual(['Alice', 'Bob']);
+    expect(tieCount).toBe(2); // Alice and Bob should tie
   });
 
   it('should distribute votes when a candidate exceeds the quota', () => {
@@ -220,6 +221,48 @@ describe('calculateStvWinners', () => {
     const { winners, tieCount } = calculateStvWinners(voteRecords, 2);
     expect(winners).toEqual(['Alice', 'Charlie']); // Alice wins first, followed by Charlie
     expect(tieCount).toBe(0);
+  });
+
+  it('should correctly pick winners in scenario #1A', () => {
+    // Quota: 80
+    const voteRecords: VoteRecord[] = [
+      { voteCount: 70, voteOrder: ['Alice', 'Dave', 'Charlie', 'Bob'] },
+      { voteCount: 63, voteOrder: ['Bob', 'Charlie', 'Alice', 'Dave'] },
+      { voteCount: 57, voteOrder: ['Charlie', 'Bob', 'Alice', 'Dave'] },
+      { voteCount: 50, voteOrder: ['Dave', 'Alice', 'Bob', 'Charlie'] }, // Eliminated
+    ];
+
+    const { winners, tieCount } = calculateStvWinners(voteRecords, 2);
+    expect(winners).toEqual(['Alice', 'Charlie']); // Alice wins first, followed by Charlie
+    expect(tieCount).toBe(0);
+  });
+
+  it('should correctly pick winners in scenario #1B', () => {
+    // Quota: 80
+    const voteRecords: VoteRecord[] = [
+      { voteCount: 70, voteOrder: ['Alice', 'Dave', 'Charlie', 'Bob'] },
+      { voteCount: 64, voteOrder: ['Bob', 'Charlie', 'Alice', 'Dave'] },
+      { voteCount: 56, voteOrder: ['Charlie', 'Bob', 'Alice', 'Dave'] },
+      { voteCount: 50, voteOrder: ['Dave', 'Alice', 'Bob', 'Charlie'] }, // Eliminated
+    ];
+
+    const { winners, tieCount } = calculateStvWinners(voteRecords, 2);
+    expect(winners).toEqual(['Alice', 'Bob']); // Alice wins first, followed by Bob
+    expect(tieCount).toBe(0);
+  });
+
+  it('should correctly pick winners in scenario #2', () => {
+    // Quota: 60
+    const voteRecords: VoteRecord[] = [
+      { voteCount: 63, voteOrder: ['Alice', 'Dave', 'Charlie', 'Bob'] },
+      { voteCount: 57, voteOrder: ['Dave', 'Alice', 'Bob', 'Charlie'] },
+      { voteCount: 60, voteOrder: ['Bob', 'Charlie', 'Alice', 'Dave'] },
+      { voteCount: 60, voteOrder: ['Charlie', 'Alice', 'Bob', 'Dave'] },
+    ];
+
+    const { winners, tieCount } = calculateStvWinners(voteRecords, 3);
+    expect(winners).toEqual(['Alice', 'Bob', 'Charlie']); // Alice wins first, followed by Bob and Charlie
+    expect(tieCount).toBe(2);
   });
 });
 

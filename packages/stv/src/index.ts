@@ -1,3 +1,5 @@
+import { Logger, LogMessage } from './logger';
+
 export type Candidate = string;
 export type VoteRecord = {
   voteCount: number;
@@ -9,16 +11,20 @@ export type CandidateMapItem = {
   votes: VoteRecord[];
 };
 
+let logger: Logger;
+
 export function calculateStvWinners(
   voteRecords: VoteRecord[],
   seats: number,
   maxRounds: number | null = 1000,
-): { winners: Candidate[]; tieCount: number } {
+): { winners: Candidate[]; tieCount: number; logs: LogMessage[] } {
+  logger = new Logger();
   voteRecords = combineVoteRecords(voteRecords);
   const totalVotes = calculateTotalVotes(voteRecords);
   const quota = calculateQuota(totalVotes, seats);
   const candidateSet = initializeCandidateSet(voteRecords);
-
+  logger.updateQuota(quota);
+  logger.updateVoteDistribution(candidateSet);
   return processElection(candidateSet, seats, quota, totalVotes, maxRounds);
 }
 
@@ -65,7 +71,7 @@ export function processElection(
   initialQuota: number,
   totalVotes: number,
   maxRounds: number | null,
-): { winners: Candidate[]; tieCount: number } {
+): { winners: Candidate[]; tieCount: number; logs: LogMessage[] } {
   const winners: Candidate[] = [];
   let rounds = 0;
   let quota = initialQuota;
@@ -92,10 +98,14 @@ export function processElection(
     }
 
     const aboveQuota = getCandidatesAboveQuota(candidateSet, quota);
+    logger.markAboveQuota(aboveQuota.map(([candidate]) => candidate));
 
     if (aboveQuota.length > seats - winners.length) {
       // console.log(`Final above quota: ${JSON.stringify(aboveQuota, null, 2)}`);
-      return selectWinnersFromAboveQuota(winners, aboveQuota, seats);
+      return {
+        ...selectWinnersFromAboveQuota(winners, aboveQuota, seats),
+        logs: logger.getLogs(),
+      };
     } else if (aboveQuota.length > 0) {
       // console.log(`Above quota: ${JSON.stringify(aboveQuota, null, 2)}`);
       for (const candidate of aboveQuota) {
@@ -107,6 +117,7 @@ export function processElection(
           quota,
           newQuotaTotalVotes,
         );
+        logger.selectWinner(candidate[0], candidateSet);
       }
     } else {
       // console.log('No candidates above quota');
@@ -118,11 +129,15 @@ export function processElection(
       );
     }
 
+    const oldQuota = quota;
     quota = newQuotaTotalVotes.value / (seats + 1);
+    if (oldQuota !== quota) {
+      logger.updateQuota(quota);
+    }
     rounds += 1;
   }
 
-  return { winners, tieCount: 0 };
+  return { winners, tieCount: 0, logs: logger.getLogs() };
 }
 
 // Get candidates who are above the quota
@@ -153,18 +168,21 @@ export function selectWinnersFromAboveQuota(
   let lastVotes = firstCandidate?.[1].totalVotes;
 
   winners.push(firstCandidate[0]);
+  logger.selectWinner(firstCandidate[0]);
 
   for (const [candidate, { totalVotes }] of aboveQuota) {
     // console.log(`Evaluating ${candidate} with ${totalVotes} votes`);
     if (totalVotes === lastVotes) {
       tieCount += 1;
       winners.push(candidate);
+      logger.selectWinner(candidate);
     } else if (winners.length >= seats) {
       break;
     } else {
       tieCount = 0;
       winners.push(candidate);
       lastVotes = totalVotes;
+      logger.selectWinner(candidate);
     }
   }
 
@@ -345,10 +363,12 @@ export function eliminateLowestCandidate(
     0,
     totalVotes,
   );
+  logger.eliminateLowestCandidate(lowestCandidate[0], candidateSet);
 
   // If all candidates are eliminated and no more seats to fill, add remaining candidates to winners
   if (candidateSet.size === 0 && winners.length < seats) {
     winners.push(lowestCandidate[0]);
+    logger.selectWinner(lowestCandidate[0]);
   }
 }
 
