@@ -4,7 +4,13 @@ import dtsPlugin from 'vite-plugin-dts';
 
 export const libConfig = (entryName: string): UserConfig =>
   defineConfig({
-    plugins: [dtsPlugin({ rollupTypes: true })],
+    plugins: [
+      dtsPlugin({
+        rollupTypes: true,
+        outDir: 'dist', // Ensure declaration files are output to the dist folder
+        entryRoot: 'src', // Use src as the root for type declarations
+      }),
+    ],
     build: {
       rollupOptions: {
         plugins: [autoExternal()],
@@ -13,7 +19,7 @@ export const libConfig = (entryName: string): UserConfig =>
       lib: {
         entry: entryName,
         formats: ['es', 'cjs'],
-        fileName: (format) => `dist.${format}.js`,
+        fileName: (format) => `index.${format}.js`,
       },
       target: 'esnext',
       sourcemap: true,

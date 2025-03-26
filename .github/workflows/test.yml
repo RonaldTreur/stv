@@ -14,13 +14,14 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         registry-url: 'https://registry.npmjs.org'
-        node-version: 22.x
+        node-version-file: '.nvmrc'
 
     - name: Install pnpm
-      uses: pnpm/action-setup@v3
+      uses: pnpm/action-setup@v4
       id: pnpm-install
       with:
-        run_install: false
+          version: 10.6.4
+          run_install: false
 
     - name: Get pnpm store directory
       id: pnpm-cache
