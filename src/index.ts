@@ -125,7 +125,7 @@ export function processElection(
           votesToRedistribute,
           newQuotaTotalVotes,
         );
-        logger.selectWinner(candidate[0], candidateSet);
+        logger.selectWinner(candidate, candidateSet);
       }
     } else {
       // console.log('No candidates above quota');
