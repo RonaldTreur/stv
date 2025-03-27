@@ -13,7 +13,7 @@
     "clean": "rimraf dist node_modules",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
-    "prepare": "npm run build"
+    "prepare": "pnpm build"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
