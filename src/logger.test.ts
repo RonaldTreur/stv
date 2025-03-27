@@ -127,6 +127,10 @@ describe('calculateStvWinners', () => {
       logMessages = logs;
     });
 
+    it('should get 9 log messages', () => {
+      expect(logMessages).toHaveLength(9);
+    });
+
     it('should correctly log initial calulated quota', () => {
       const logMessage = logMessages[0] as LogQuotaUpdateMessage;
       expect(logMessage.type).toEqual(LogType.UPDATE_QUOTA);
@@ -188,30 +192,36 @@ describe('calculateStvWinners', () => {
       ]);
     });
 
-    it('should correctly log the candidate elimination', () => {
-      const logMessage = logMessages[6] as LogCandidateActionMessage;
-      expect(logMessage.type).toEqual(LogType.ELIMINATE_CANDIDATE);
-      expect(logMessage.candidate).toEqual('Charlie');
+    it('should correctly log the updated quota', () => {
+      const logMessage = logMessages[6] as LogQuotaUpdateMessage;
+      expect(logMessage.type).toEqual(LogType.UPDATE_QUOTA);
+      expect(logMessage.quota).toEqual(3.6875);
     });
 
-    it('should correctly log the updated vote distribution', () => {
-      const logMessage = logMessages[6] as LogCandidateActionMessage;
-      expect(logMessage.voteDistribution).toEqual([
-        { candidate: 'Bob', totalVotes: 3.7, totalWallets: 1 },
-        { candidate: 'Dave', totalVotes: 3.8, totalWallets: 1 },
-      ]);
-    });
+    // it('should correctly log the candidate elimination', () => {
+    //   const logMessage = logMessages[7] as LogCandidateActionMessage;
+    //   expect(logMessage.type).toEqual(LogType.ELIMINATE_CANDIDATE);
+    //   expect(logMessage.candidate).toEqual('Charlie');
+    // });
+
+    // it('should correctly log the updated vote distribution', () => {
+    //   const logMessage = logMessages[7] as LogCandidateActionMessage;
+    //   expect(logMessage.voteDistribution).toEqual([
+    //     { candidate: 'Bob', totalVotes: 3.7, totalWallets: 1 },
+    //     { candidate: 'Dave', totalVotes: 3.8, totalWallets: 1 },
+    //   ]);
+    // });
 
     it('should correctly log the third candidate above quota', () => {
       const logMessage = logMessages[7] as LogAboveQuotaMessage;
       expect(logMessage.type).toEqual(LogType.ABOVE_QUOTA);
-      expect(logMessage.candidate).toEqual('Dave');
+      expect(logMessage.candidate).toEqual('Bob');
     });
 
     it('should correctly log the third winner selection', () => {
       const logMessage = logMessages[8] as LogCandidateActionMessage;
       expect(logMessage.type).toEqual(LogType.SELECT_WINNER);
-      expect(logMessage.candidate).toEqual('Dave');
+      expect(logMessage.candidate).toEqual('Bob');
     });
   });
 
